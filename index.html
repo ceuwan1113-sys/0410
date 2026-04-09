@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>數位遺產 — 當你離開後</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#07070e;--phone:#0c0c17;--surface:rgba(255,255,255,.035);--border:rgba(255,255,255,.075);
+  --text:#d4d4ee;--muted:#52527a;--accent:#5b9cf6;--warn:#f05858;--ok:#4ecdb0;--warm:#f0a860;
+  --sf:'Noto Serif TC',serif;--mono:'Share Tech Mono',monospace;
+}
+body{background:var(--bg);min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;font-family:var(--sf);color:var(--text);padding:20px 0 40px;}
+.tag{font-family:var(--mono);font-size:10px;color:#1e1e38;letter-spacing:1px;margin-bottom:14px;}
+
+/* ── Phone ── */
+.phone{width:375px;height:790px;background:var(--phone);border-radius:50px;
+  border:1.5px solid #222234;position:relative;overflow:hidden;
+  box-shadow:0 0 0 1px #17172a,0 40px 100px rgba(0,0,0,.9),inset 0 0 0 1px rgba(255,255,255,.04);}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:128px;height:28px;
+  background:var(--phone);border-radius:0 0 16px 16px;z-index:200;}
+.sbar{position:absolute;top:0;left:0;right:0;height:42px;display:flex;align-items:flex-end;
+  justify-content:space-between;padding:0 26px 7px;z-index:150;font-family:var(--mono);
+  font-size:10px;color:rgba(255,255,255,.3);pointer-events:none;}
+
+/* ── Screens ── */
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;
+  transition:opacity .3s,transform .3s;transform:translateX(18px);overflow:hidden;}
+.scr.active{opacity:1;pointer-events:all;transform:translateX(0);}
+.scr.exit{opacity:0;transform:translateX(-18px);}
+.sb{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+.sb::-webkit-scrollbar{display:none;}
+.bpad{padding:14px 20px 32px;}
+
+/* ── Type ── */
+.eye{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--muted);}
+.h1{font-size:22px;font-weight:700;line-height:1.4;}
+.body{font-size:13px;line-height:1.95;color:#8888b0;}
+
+/* ── Buttons ── */
+.btn{border:none;border-radius:24px;font-family:var(--sf);font-size:14px;cursor:pointer;
+  transition:all .18s;display:block;width:100%;padding:14px 20px;text-align:center;letter-spacing:.5px;}
+.btn-b{background:linear-gradient(135deg,#5b9cf6,#7870f0);color:#fff;}
+.btn-r{background:linear-gradient(135deg,#f05050,#f07878);color:#fff;}
+.btn-w{background:linear-gradient(135deg,#f0a060,#e07070);color:#fff;}
+.btn-g{background:none;border:1px solid var(--border);color:var(--muted);}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.07);}
+.btn:active{transform:translateY(0);filter:brightness(.93);}
+.btn+.btn{margin-top:8px;}
+
+/* ── Choice Cards ── */
+.cc{border-radius:15px;border:1px solid var(--border);background:var(--surface);padding:17px 17px;
+  cursor:pointer;transition:all .2s;display:flex;align-items:flex-start;gap:13px;margin-bottom:11px;}
+.cc:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.05);}
+.cc.r:hover{border-color:rgba(240,80,80,.4);background:rgba(240,80,80,.06);}
+.cc.w:hover{border-color:rgba(240,168,96,.4);background:rgba(240,168,96,.06);}
+.cc.gr:hover{border-color:rgba(140,140,140,.3);background:rgba(140,140,140,.04);}
+.cc-ic{font-size:27px;flex-shrink:0;margin-top:2px;}
+.cc h3{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.cc p{font-size:12px;color:var(--muted);line-height:1.6;}
+
+/* ── Task Hub ── */
+.ti{border-radius:13px;border:1px solid var(--border);background:var(--surface);padding:13px 15px;
+  cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px;margin-bottom:9px;}
+.ti.done{opacity:.45;border-color:rgba(78,205,176,.25);background:rgba(78,205,176,.05);pointer-events:none;}
+.ti-circle{width:24px;height:24px;border-radius:50%;border:1.5px solid rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:all .2s;}
+.ti.done .ti-circle{background:var(--ok);border-color:var(--ok);}
+.ti-info h4{font-size:13px;color:#c0c0d5;margin-bottom:2px;}
+.ti-info p{font-size:11px;color:#404060;}
+.ti-badge{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--warn);
+  background:rgba(240,88,88,.1);padding:3px 8px;border-radius:7px;flex-shrink:0;}
+.ti.done .ti-badge{display:none;}
+
+/* ── Timer ── */
+.tblock{padding:12px 20px 8px;}
+.tnum{font-family:var(--mono);font-size:38px;font-weight:700;color:var(--warn);text-align:center;
+  margin-bottom:7px;transition:color .4s;}
+.tnum.urg{color:#ff1a1a;animation:blk .55s ease-in-out infinite;}
+@keyframes blk{0%,100%{opacity:1}50%{opacity:.45}}
+.tbar{height:3px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden;}
+.tfill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--warn),#ffaaaa);transition:width 1s linear;}
+
+/* ── Mock App Layer ── */
+.mock-layer{position:absolute;inset:0;background:var(--phone);z-index:90;display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .28s ease;overflow:hidden;}
+.mock-layer.open{transform:translateX(0);}
+
+/* Mock nav bar */
+.mnav{display:flex;align-items:center;padding:42px 16px 12px;flex-shrink:0;border-bottom:1px solid var(--border);}
+.mnav-back{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--accent);cursor:pointer;padding:4px 8px 4px 0;flex-shrink:0;}
+.mnav-title{flex:1;text-align:center;font-size:16px;font-weight:600;color:var(--text);padding-right:60px;}
+.mock-body{flex:1;overflow-y:auto;overflow-x:hidden;}
+.mock-body::-webkit-scrollbar{display:none;}
+
+/* iOS Settings style */
+.set-section{margin:16px 0 0;}
+.set-section-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);
+  padding:0 16px;margin-bottom:6px;}
+.set-group{background:rgba(255,255,255,.04);border-radius:12px;margin:0 12px;overflow:hidden;
+  border:1px solid var(--border);}
+.set-row{display:flex;align-items:center;padding:13px 15px;gap:12px;cursor:pointer;
+  border-bottom:1px solid rgba(255,255,255,.05);transition:background .15s;}
+.set-row:last-child{border-bottom:none;}
+.set-row:hover{background:rgba(255,255,255,.04);}
+.set-row-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;}
+.set-row-text{flex:1;}
+.set-row-text h4{font-size:14px;color:var(--text);}
+.set-row-text p{font-size:11px;color:var(--muted);margin-top:2px;}
+.set-row-right{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;}
+.chev{color:rgba(255,255,255,.2);font-size:12px;}
+.set-profile{display:flex;align-items:center;gap:14px;padding:16px 15px;cursor:pointer;
+  transition:background .15s;}
+.set-profile:hover{background:rgba(255,255,255,.04);}
+.profile-av{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#4060b0,#7040a0);
+  display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.profile-info h3{font-size:17px;font-weight:600;color:var(--text);}
+.profile-info p{font-size:12px;color:var(--muted);margin-top:2px;}
+.set-warn{background:rgba(240,88,88,.06);border-radius:12px;margin:8px 12px;padding:12px 15px;
+  border:1px solid rgba(240,88,88,.15);font-size:12px;color:#c07070;line-height:1.65;}
+.set-desc{font-size:12px;color:var(--muted);padding:8px 16px;line-height:1.65;margin-bottom:4px;}
+.set-action{background:rgba(91,156,246,.08);border-radius:12px;margin:8px 12px;padding:14px 15px;
+  border:1px solid rgba(91,156,246,.2);cursor:pointer;transition:all .18s;}
+.set-action:hover{background:rgba(91,156,246,.13);}
+.set-action h4{font-size:14px;color:var(--accent);margin-bottom:3px;}
+.set-action p{font-size:11px;color:var(--muted);line-height:1.55;}
+.set-input{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;
+  padding:12px 14px;color:var(--text);font-family:var(--mono);font-size:14px;outline:none;
+  width:calc(100% - 24px);margin:0 12px 8px;display:block;}
+.set-input:focus{border-color:rgba(91,156,246,.35);}
+.pw-reqs{margin:0 12px 14px;font-size:11px;color:#484868;line-height:1.7;}
+.pw-req{display:flex;align-items:center;gap:6px;}
+.pw-req.ok{color:var(--ok);}
+.pw-req::before{content:'○';font-size:10px;}
+.pw-req.ok::before{content:'●';}
+
+/* ── LINE style ── */
+.line-header{background:#1a2a1a;padding:44px 16px 12px;display:flex;align-items:center;gap:12px;}
+.line-header-title{font-size:18px;font-weight:700;color:#e0ffe0;}
+.line-tabs{display:flex;background:#111811;border-bottom:1px solid #1a2a1a;}
+.line-tab{flex:1;padding:10px;text-align:center;font-size:12px;color:#449944;opacity:.5;cursor:pointer;}
+.line-tab.active{opacity:1;border-bottom:2px solid #44cc44;}
+.chat-list{flex:1;overflow-y:auto;}
+.chat-item{position:relative;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.04);}
+.chat-slide{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#0d1a0d;
+  transition:transform .25s ease;will-change:transform;user-select:none;}
+.chat-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;}
+.chat-av.priv{background:#2a1a1a;}
+.chat-av.norm{background:#1a2a1a;}
+.chat-info{flex:1;min-width:0;}
+.chat-info h4{font-size:14px;color:#c0e0c0;margin-bottom:3px;}
+.chat-info p{font-size:12px;color:#506050;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-meta{text-align:right;flex-shrink:0;}
+.chat-meta .time{font-size:10px;color:#405040;font-family:var(--mono);}
+.chat-meta .badge{margin-top:4px;background:#44cc44;border-radius:50%;width:18px;height:18px;
+  display:flex;align-items:center;justify-content:center;font-size:10px;color:#000;font-weight:700;margin-left:auto;}
+.line-hint{text-align:center;font-size:11px;color:#304030;padding:12px;font-family:var(--mono);}
+.line-done-banner{background:rgba(68,204,68,.08);border:1px solid rgba(68,204,68,.2);border-radius:12px;
+  margin:12px;padding:12px 16px;font-size:13px;color:#44cc44;display:none;}
+
+/* ── Photos style ── */
+.photos-header{background:#0a0a14;padding:44px 16px 10px;}
+.photos-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.photos-sub{font-size:12px;color:var(--muted);}
+.album-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px;}
+.album-card{border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .18s;}
+.album-card:hover{transform:scale(0.97);}
+.album-thumb{aspect-ratio:1;display:grid;grid-template-columns:1fr 1fr;gap:2px;overflow:hidden;}
+.album-thumb>div{background:#1a1a2a;}
+.album-info{padding:8px 4px 4px;}
+.album-info h4{font-size:13px;color:var(--text);}
+.album-info p{font-size:11px;color:var(--muted);}
+.album-lock{background:#1a1a2a;aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  font-size:36px;border-radius:12px 12px 0 0;}
+/* Photo selection grid */
+.photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:0;}
+.ph{aspect-ratio:1;position:relative;cursor:pointer;overflow:hidden;}
+.ph-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;
+  transition:transform .15s;}
+.ph.sel .ph-img{transform:scale(0.88);}
+.ph-check{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.6);background:rgba(0,0,0,.4);display:flex;align-items:center;
+  justify-content:center;font-size:11px;color:transparent;transition:all .15s;}
+.ph.sel .ph-check{background:var(--accent);border-color:var(--accent);color:#fff;}
+.ph-lock{position:absolute;bottom:3px;left:3px;font-size:10px;opacity:.7;}
+.photo-action-bar{background:#0a0a14;border-top:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:12px;}
+.photo-count{font-size:13px;color:var(--muted);flex:1;}
+/* Face ID overlay */
+.faceid-overlay{position:absolute;inset:0;background:rgba(0,0,0,.92);z-index:10;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+.faceid-ring{width:80px;height:80px;border-radius:50%;border:2px solid rgba(255,255,255,.3);
+  display:flex;align-items:center;justify-content:center;font-size:36px;
+  animation:facepulse 1.5s ease-in-out infinite;}
+@keyframes facepulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.2)}50%{box-shadow:0 0 0 12px rgba(255,255,255,0)}}
+.faceid-text{font-size:15px;color:rgba(255,255,255,.8);}
+.faceid-sub{font-size:12px;color:rgba(255,255,255,.4);}
+
+/* ── Step dots (preserve) ── */
+.sdots{display:flex;gap:5px;justify-content:center;padding:6px 0 0;}
+.sd{height:5px;border-radius:3px;background:rgba(255,255,255,.1);transition:all .3s;width:18px;}
+.sd.active{background:var(--accent);width:26px;}
+.sd.done{background:var(--ok);}
+
+/* ── Toggles ── */
+.trow{display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:13px;
+  border:1px solid var(--border);background:var(--surface);margin-bottom:9px;}
+.trow .ic{font-size:20px;flex-shrink:0;}
+.trow .inf{flex:1;}
+.trow .inf h4{font-size:13px;color:#c0c0d5;}
+.trow .inf p{font-size:11px;color:#404060;margin-top:2px;}
+.tog{width:40px;height:22px;border-radius:11px;background:rgba(255,255,255,.1);position:relative;
+  cursor:pointer;transition:background .2s;flex-shrink:0;}
+.tog.on{background:var(--accent);}
+.tog::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;
+  top:2px;left:2px;transition:transform .2s;}
+.tog.on::after{transform:translateX(18px);}
+
+/* ── Contacts ── */
+.crow{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;
+  border:1px solid var(--border);background:var(--surface);cursor:pointer;margin-bottom:8px;transition:all .2s;}
+.crow.sel{border-color:rgba(91,156,246,.4);background:rgba(91,156,246,.08);}
+.cav{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.cname{font-size:14px;color:#c0c0d5;}
+.crel{font-size:11px;color:var(--muted);margin-top:1px;}
+.cchk{margin-left:auto;color:var(--accent);font-size:18px;display:none;}
+.crow.sel .cchk{display:block;}
+
+/* ── Endings ── */
+.eicon{font-size:52px;text-align:center;padding-top:8px;margin-bottom:10px;}
+.etitle{font-size:21px;font-weight:700;text-align:center;padding:0 20px;margin-bottom:8px;}
+.edesc{font-size:13px;color:var(--muted);line-height:1.9;padding:0 20px;margin-bottom:20px;text-align:center;}
+.scard{margin:0 20px 16px;border-radius:17px;border:1px solid var(--border);background:var(--surface);padding:18px;text-align:center;}
+.snum{font-family:var(--mono);font-size:50px;font-weight:700;line-height:1;}
+.slabel{font-size:10px;color:var(--muted);letter-spacing:3px;margin-top:5px;}
+.tcard{margin:0 20px 16px;border-radius:15px;border:1px solid rgba(91,156,246,.17);background:rgba(91,156,246,.05);padding:16px;}
+.thead{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:2px;margin-bottom:11px;}
+.titem{display:flex;gap:8px;font-size:12px;color:#8888b0;line-height:1.7;margin-bottom:8px;}
+.titem::before{content:'▸';color:var(--accent);flex-shrink:0;margin-top:2px;}
+.notif-box{display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,.03);
+  border:1px solid var(--border);border-radius:13px;padding:12px 13px;margin-bottom:8px;}
+.nbtxt h4{font-size:12px;color:#c0c0d5;margin-bottom:3px;}
+.nbtxt p{font-size:11px;color:var(--muted);line-height:1.5;}
+
+/* ── Misc ── */
+.pad{padding:0 20px;}
+.slabel2{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;padding:0 20px;margin-bottom:9px;}
+textarea.fa{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:13px;
+  padding:13px 15px;color:#c0c0d5;font-family:var(--sf);font-size:13px;line-height:1.85;
+  resize:none;height:145px;outline:none;}
+textarea.fa:focus{border-color:rgba(91,156,246,.3);}
+textarea.fa::placeholder{color:#303050;}
+.rrow{display:flex;gap:10px;align-items:flex-start;padding:10px 13px;border-radius:12px;
+  border:1px solid var(--border);background:var(--surface);margin-bottom:8px;}
+.rl{font-size:11px;color:var(--muted);width:68px;flex-shrink:0;padding-top:1px;}
+.rv{font-size:12px;color:#c0c0d5;flex:1;line-height:1.55;}
+.intro-bg{background:radial-gradient(ellipse 280px 260px at 50% 38%,rgba(91,156,246,.07) 0%,transparent 70%),#07070e;}
+.gring{width:78px;height:78px;border-radius:50%;border:1px solid rgba(91,156,246,.2);display:flex;
+  align-items:center;justify-content:center;margin:0 auto 20px;animation:gp 2.4s ease-in-out infinite;font-size:32px;}
+@keyframes gp{0%,100%{box-shadow:0 0 0 0 rgba(91,156,246,.2);transform:scale(1)}50%{box-shadow:0 0 0 14px rgba(91,156,246,0);transform:scale(1.03)}}
+.fi{animation:fi .5s ease forwards;}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.step-header{padding:0 20px 12px;}
+</style>
+</head>
+<body>
+<div class="tag">政大大學報 第1824期 · 數位遺產互動體驗</div>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="sbar"><span id="clk">09:41</span><span>◼◼◼</span></div>
+
+  <!-- ── INTRO ── -->
+  <div class="scr active intro-bg" id="s0">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 26px 20px;text-align:center;">
+      <div class="eye" style="margin-bottom:16px;">互動情境體驗</div>
+      <div class="gring">📱</div>
+      <div class="h1" style="margin-bottom:13px;">當你離開後<br>誰來守護你的<br>數位人生？</div>
+      <div class="body" style="margin-bottom:34px;">照片、訊息、帳號——<br>意外來臨時，你的數位足跡將何去何從？</div>
+      <button class="btn btn-b" onclick="G('s1')">開始體驗</button>
+      <div style="font-size:11px;color:#252540;margin-top:14px;line-height:1.6;">改編自《政大大學報》專題報導<br>「當人生留在雲端」2026.03.26</div>
+    </div>
+  </div>
+
+  <!-- ── STORY ── -->
+  <div class="scr" id="s1" style="background:#0c0c17;">
+    <div style="padding:46px 20px 14px;">
+      <div class="eye" style="margin-bottom:8px;">情境設定</div>
+      <div class="h1" style="font-size:19px;">今天早晨，發生了意外</div>
+    </div>
+    <div class="sb" style="padding:0 20px;">
+      <div class="body fi">
+        <p style="margin-bottom:13px;">你在上班途中遭遇了車禍。你的家人趕到醫院，醫生告訴他們——你走了。</p>
+        <p style="margin-bottom:13px;">悲傷之中，家人拿起你的手機，想找尋你最後傳出的訊息。通知一則一則彈出——</p>
+        <div class="notif-box"><span style="font-size:18px;">💬</span><div class="nbtxt"><h4>LINE · 媽媽</h4><p>你今天有沒有吃早餐啊</p></div></div>
+        <div class="notif-box"><span style="font-size:18px;">👍</span><div class="nbtxt"><h4>Facebook</h4><p>陳志豪 對你上週的貼文按讚</p></div></div>
+        <div class="notif-box"><span style="font-size:18px;">📸</span><div class="nbtxt"><h4>iCloud 相簿</h4><p>「這個月的回憶」備份完成，共 214 張</p></div></div>
+        <p style="margin:14px 0;">你的帳號還在線上。相簿裡有你從未整理的私密照片，聊天紀錄裡有你不想被任何人看見的對話——但也有那些你可能希望家人留存的記憶。</p>
+        <div style="background:rgba(91,156,246,.07);border-left:2px solid var(--accent);border-radius:0 10px 10px 0;padding:11px 13px;margin-bottom:16px;">
+          <div style="font-size:10px;font-family:var(--mono);color:var(--accent);margin-bottom:4px;letter-spacing:1px;">真實案例</div>
+          <div style="font-size:12px;color:#6868a0;line-height:1.7;">陳姮妮在父親過世約十年後，某天發現父親的 Facebook 帳號遭人駭入，對方勒索她付贖金。若生前沒有事先安排，數位帳號可能成為家人的困擾。</div>
+        </div>
+        <p style="margin-bottom:18px;">你有機會提前處理，但一切都要在時間壓力下完成。</p>
+      </div>
+    </div>
+    <div class="bpad"><button class="btn btn-b" onclick="G('s2')">面對我的數位遺產</button></div>
+  </div>
+
+  <!-- ── CHOICE ── -->
+  <div class="scr" id="s2" style="background:#0c0c17;">
+    <div style="padding:46px 20px 14px;">
+      <div class="eye" style="margin-bottom:8px;">做出選擇</div>
+      <div class="h1" style="font-size:19px;margin-bottom:7px;">你的數位帳號<br>該如何處理？</div>
+      <div class="body" style="font-size:12px;margin-bottom:18px;">兩種方向，各有取捨，沒有標準答案。</div>
+    </div>
+    <div class="sb" style="padding:0 20px 0;">
+      <div class="cc r" onclick="startDelete()">
+        <div class="cc-ic">🗑️</div>
+        <div><h3>刪除私密資料</h3><p>搶在帳號被盜之前，清除密碼、對話與相簿。計時器倒數中，你能在時間內完成幾項？</p></div>
+      </div>
+      <div class="cc w" onclick="startPreserve()">
+        <div class="cc-ic">💝</div>
+        <div><h3>為家人保留記憶</h3><p>設定遺產聯絡人、挑選照片、留下最後的話。功能藏得有點深，你找得到嗎？</p></div>
+      </div>
+      <div class="cc gr" onclick="G('s-nothing')">
+        <div class="cc-ic">😶</div>
+        <div><h3>什麼都不做，先這樣吧</h3><p>反正以後的事以後再說⋯</p></div>
+      </div>
+    </div>
+    <div style="padding:12px 20px 28px;font-size:11px;color:#252540;text-align:center;line-height:1.7;">
+      律師陳業鑫：目前台灣對數位資產繼承尚無專門規範
+    </div>
+  </div>
+
+  <!-- ── DELETE HUB ── -->
+  <div class="scr" id="s-del" style="background:#100810;">
+    <div class="tblock" style="padding-top:46px;">
+      <div class="eye" style="text-align:center;color:#b03030;margin-bottom:7px;letter-spacing:3px;">緊急模式</div>
+      <div class="tnum" id="tnum">01:30</div>
+      <div class="tbar"><div class="tfill" id="tfill" style="width:100%"></div></div>
+      <div style="text-align:center;font-size:10px;color:#502030;margin-top:5px;font-family:var(--mono);">完成越多項目，結局越好</div>
+    </div>
+    <div class="sb" style="padding:10px 20px 0;">
+      <div class="slabel2" style="padding:0;margin-bottom:8px;">待處理項目</div>
+      <div class="ti" id="dt1" onclick="openMock('apple-pw')">
+        <div class="ti-circle" id="dt1c">🔒</div>
+        <div class="ti-info"><h4>Apple 帳號密碼</h4><p>防止他人透過 iCloud 存取你的資料</p></div>
+        <div class="ti-badge">必要</div>
+      </div>
+      <div class="ti" id="dt2" onclick="openMock('line-del')">
+        <div class="ti-circle" id="dt2c">💬</div>
+        <div class="ti-info"><h4>LINE 私密對話</h4><p>長按刪除不想被看到的聊天紀錄</p></div>
+        <div class="ti-badge">重要</div>
+      </div>
+      <div class="ti" id="dt3" onclick="openMock('photos-del')">
+        <div class="ti-circle" id="dt3c">📸</div>
+        <div class="ti-info"><h4>隱藏相簿</h4><p>找到並清除 iCloud 中的私密照片</p></div>
+        <div class="ti-badge">重要</div>
+      </div>
+    </div>
+    <div id="del-status" style="text-align:center;padding:10px;font-size:11px;color:#602030;font-family:var(--mono);"></div>
+  </div>
+
+  <!-- ── PRESERVE HUB ── -->
+  <div class="scr" id="s-pre" style="background:#0a0c14;">
+    <div style="padding:46px 20px 12px;">
+      <div class="sdots" id="sdots"><div class="sd active" id="sd0"></div><div class="sd" id="sd1"></div><div class="sd" id="sd2"></div><div class="sd" id="sd3"></div></div>
+    </div>
+    <!-- Step 0: Apple Legacy -->
+    <div id="ps0">
+      <div class="step-header">
+        <div class="eye" style="margin-bottom:7px;">步驟 1 / 4</div>
+        <div class="h1" style="font-size:18px;margin-bottom:6px;">設定 Apple 遺產聯絡人</div>
+        <div class="body" style="font-size:12px;margin-bottom:4px;">讓你選擇授予權限的人，在你過世後存取你「Apple 帳號」中的資料。</div>
+      </div>
+      <div class="pad" style="margin-bottom:14px;">
+        <button class="btn btn-b" onclick="openMock('apple-legacy')">打開 Apple 設定 →</button>
+      </div>
+      <div style="background:rgba(91,156,246,.05);border-radius:12px;margin:0 20px;padding:12px 14px;border:1px solid rgba(91,156,246,.12);">
+        <div style="font-size:10px;font-family:var(--mono);color:var(--accent);margin-bottom:5px;letter-spacing:1px;">提示</div>
+        <div style="font-size:12px;color:#6060a0;line-height:1.65;">路徑比你想像的更深，請耐心尋找。這是真實功能的模擬介面。</div>
+      </div>
+    </div>
+    <!-- Step 1: Contact selector -->
+    <div id="ps1" style="display:none;">
+      <div class="step-header">
+        <div class="eye" style="margin-bottom:7px;">步驟 2 / 4</div>
+        <div class="h1" style="font-size:18px;margin-bottom:6px;">選擇遺產聯絡人</div>
+        <div class="body" style="font-size:12px;">選擇你信任的人，他們不需要有 Apple 裝置也能成為聯絡人。</div>
+      </div>
+      <div class="sb" style="padding:8px 20px 0;">
+        <div class="crow" id="c0" onclick="selC('c0','媽媽 林美華')"><div class="cav" style="background:#2a1a3a;">👩</div><div><div class="cname">林美華</div><div class="crel">媽媽</div></div><div class="cchk">✓</div></div>
+        <div class="crow" id="c1" onclick="selC('c1','哥哥 林志明')"><div class="cav" style="background:#1a2a3a;">👨</div><div><div class="cname">林志明</div><div class="crel">哥哥</div></div><div class="cchk">✓</div></div>
+        <div class="crow" id="c2" onclick="selC('c2','好友 陳大偉')"><div class="cav" style="background:#1a3a2a;">🧑</div><div><div class="cname">陳大偉</div><div class="crel">好友</div></div><div class="cchk">✓</div></div>
+        <div class="crow" id="c3" onclick="selC('c3','姊姊 林雅婷')"><div class="cav" style="background:#3a2a1a;">👩‍🦱</div><div><div class="cname">林雅婷</div><div class="crel">姊姊</div></div><div class="cchk">✓</div></div>
+      </div>
+    </div>
+    <!-- Step 2: Photo share -->
+    <div id="ps2" style="display:none;">
+      <div class="step-header">
+        <div class="eye" style="margin-bottom:7px;">步驟 3 / 4</div>
+        <div class="h1" style="font-size:18px;margin-bottom:6px;">挑選要保留的照片</div>
+        <div class="body" style="font-size:12px;">從你的相簿中選擇想讓家人看到的回憶。</div>
+      </div>
+      <div class="pad" style="margin-bottom:12px;">
+        <button class="btn btn-w" onclick="openMock('photo-share')">開啟相簿選取 →</button>
+      </div>
+      <div id="photo-share-status" style="text-align:center;font-size:12px;color:var(--muted);display:none;">
+        已選取 <span id="photo-sel-count">0</span> 張照片
+      </div>
+    </div>
+    <!-- Step 3: Farewell -->
+    <div id="ps3" style="display:none;">
+      <div class="step-header">
+        <div class="eye" style="margin-bottom:7px;">步驟 4 / 4</div>
+        <div class="h1" style="font-size:18px;margin-bottom:6px;">留下最後的話</div>
+        <div class="body" style="font-size:12px;margin-bottom:14px;">寫給家人的信，或你想留下的任何話。由遺產聯絡人保管。</div>
+      </div>
+      <div class="pad">
+        <textarea class="fa" id="ftext" placeholder="「媽媽，謝謝妳這幾十年⋯」"></textarea>
+        <div style="font-size:11px;color:#252545;text-align:right;margin-top:5px;" id="wc">0 字</div>
+      </div>
+    </div>
+    <!-- Bottom buttons -->
+    <div class="bpad" id="pre-btn" style="display:none;">
+      <button class="btn btn-w" id="pre-next-btn" onclick="preNext()">下一步</button>
+      <button class="btn btn-g" id="pre-skip-btn" style="display:none;" onclick="preNext()">跳過</button>
+    </div>
+  </div>
+
+  <!-- ── DO NOTHING ── -->
+  <div class="scr" id="s-nothing" style="background:#0c0c17;">
+    <div class="sb" style="padding:50px 20px 0;">
+      <div class="eye" style="margin-bottom:8px;">時間快轉⋯</div>
+      <div class="h1" style="font-size:19px;margin-bottom:14px;">三個月後</div>
+      <div style="background:rgba(240,88,88,.07);border-radius:13px;border:1px solid rgba(240,88,88,.18);padding:13px 15px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:600;color:#f08080;margin-bottom:4px;">🚨 帳號異常登入</div>
+        <div style="font-size:12px;color:#805858;line-height:1.65;">你的 Facebook 帳號已從境外 IP 登入，對方開始聯繫你的家人索取「帳號維護費」。</div>
+      </div>
+      <div style="background:rgba(240,88,88,.07);border-radius:13px;border:1px solid rgba(240,88,88,.18);padding:13px 15px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:600;color:#f08080;margin-bottom:4px;">📷 2,847 張照片消失了</div>
+        <div style="font-size:12px;color:#805858;line-height:1.65;">帳號被平台停用後，所有照片與留言全數消失，家人什麼都留不住。</div>
+      </div>
+      <div style="background:rgba(255,255,255,.03);border-radius:13px;border:1px solid var(--border);padding:14px 15px;margin-bottom:16px;">
+        <div style="font-size:12px;color:#6868a0;line-height:1.8;">律師陳業鑫表示：「若逝者生前未交代密碼，家屬在尋求警方或法律協助時，常因事件非涉及刑事犯罪且警方無權干涉私人契約，導致處理過程處處碰壁。」</div>
+      </div>
+    </div>
+    <div class="bpad"><button class="btn btn-b" onclick="G('s-end-c')">查看結局</button></div>
+  </div>
+
+  <!-- ── ENDING A1 (delete complete) ── -->
+  <div class="scr" id="s-end-a1" style="background:#0c0c17;">
+    <div class="sb" style="padding:50px 0 0;">
+      <div class="eicon">🛡️</div>
+      <div class="etitle" style="color:#c8c8e8;">資料保護完成</div>
+      <div class="edesc">你在時限內完成了所有私密資料的清除與帳號保護。帳號已安全，不會遭到盜用或勒索。</div>
+      <div class="scard"><div class="snum" style="color:#a0a0d0;" id="sc-a1">--</div><div class="slabel">DIGITAL ESTATE SCORE</div></div>
+      <div class="tcard"><div class="thead">完成了什麼</div>
+        <div class="titem">Apple 帳號密碼已更換，iCloud 資料受到保護</div>
+        <div class="titem">LINE 私密對話已清除</div>
+        <div class="titem">隱藏相簿已刪除，照片不會外流</div>
+      </div>
+      <div class="tcard" style="border-color:rgba(255,255,255,.1);background:rgba(255,255,255,.03);">
+        <div class="thead" style="color:#888;">延伸思考</div>
+        <div class="titem" style="color:#666;">若家人想保留你的某些數位記憶，這條路可能沒留下空間——這也是一種選擇的代價，沒有對錯之分。</div>
+        <div class="titem" style="color:#666;">如果想兼顧隱私保護與記憶傳承，可以考慮生前分類哪些要保留、哪些要清除。</div>
+      </div>
+    </div>
+    <div class="bpad"><button class="btn btn-g" onclick="restart()">重新開始</button></div>
+  </div>
+
+  <!-- ── ENDING A2 (time up) ── -->
+  <div class="scr" id="s-end-a2" style="background:#0c0c17;">
+    <div class="sb" style="padding:50px 0 0;">
+      <div class="eicon">⏱️</div>
+      <div class="etitle" style="color:#d8a0a0;">時間到了</div>
+      <div class="edesc">倒數結束，部分任務未完成。已完成的項目已受到保護，但未處理的部分仍存在風險。</div>
+      <div class="scard"><div class="snum" style="color:#d08080;" id="sc-a2">--</div><div class="slabel">DIGITAL ESTATE SCORE</div></div>
+      <div id="a2-detail" style="margin:0 20px 14px;background:rgba(240,88,88,.06);border-radius:13px;border:1px solid rgba(240,88,88,.15);padding:13px 15px;font-size:12px;color:#906060;line-height:1.7;"></div>
+      <div class="tcard"><div class="thead">專家建議</div>
+        <div class="titem">生前就應立遺囑，將數位資產一併納入規劃（陳業鑫律師）</div>
+        <div class="titem">使用密碼管理器，並告訴信任的人主密碼存放位置</div>
+        <div class="titem">定期清理私密內容，不等到緊急時才倉皇應對</div>
+      </div>
+    </div>
+    <div class="bpad"><button class="btn btn-g" onclick="restart()">重新開始</button></div>
+  </div>
+
+  <!-- ── ENDING B (preserve) ── -->
+  <div class="scr" id="s-end-b" style="background:#0c0c17;">
+    <div class="sb" style="padding:50px 0 0;">
+      <div class="eicon">🌸</div>
+      <div class="etitle" style="color:#f0c880;">你的記憶，將繼續存在</div>
+      <div class="edesc">因為你的事先安排，家人得以在悲傷中感受到你留下的溫度。</div>
+      <div class="scard"><div class="snum" style="color:#f0c880;" id="sc-b">--</div><div class="slabel">DIGITAL ESTATE SCORE</div></div>
+      <div id="b-review" style="margin:0 20px 14px;"></div>
+      <div style="margin:0 20px 14px;background:rgba(91,156,246,.05);border:1px solid rgba(91,156,246,.15);border-radius:13px;padding:14px 15px;">
+        <div style="font-size:10px;font-family:var(--mono);color:var(--accent);margin-bottom:6px;letter-spacing:1px;">真實故事</div>
+        <div style="font-size:12px;color:#6060a0;line-height:1.8;">小R在整理父親的手機時，才發現爸爸默默保存媽媽在家族群組分享的每一張照片。「看到才想起來，原來爸爸以前是會這樣發文的人，但我後來都忘記了。」</div>
+      </div>
+      <div class="tcard"><div class="thead">現在就可以做</div>
+        <div class="titem">Apple：設定 → [你的名字] → 登入與安全性 → 遺產聯絡人</div>
+        <div class="titem">Facebook：設定 → 個人資訊 → 管理帳號 → 紀念帳號設定</div>
+        <div class="titem">Google：帳號 → 資料與隱私 → 閒置帳號管理員</div>
+      </div>
+    </div>
+    <div class="bpad"><button class="btn btn-g" onclick="restart()">重新開始</button></div>
+  </div>
+
+  <!-- ── ENDING C (nothing) ── -->
+  <div class="scr" id="s-end-c" style="background:#0c0c17;">
+    <div class="sb" style="padding:50px 0 0;">
+      <div class="eicon">💔</div>
+      <div class="etitle" style="color:#a08080;">數位人生，無聲消散</div>
+      <div class="edesc">什麼都沒有安排，家人花了數月時間奔波，卻什麼都守不住。</div>
+      <div class="scard"><div class="snum" style="color:#806060;">08</div><div class="slabel">DIGITAL ESTATE SCORE</div></div>
+      <div class="tcard"><div class="thead">發生了什麼</div>
+        <div class="titem">帳號遭駭，家人被要求支付贖金</div>
+        <div class="titem">無法取回帳號密碼，法律也幫不上忙</div>
+        <div class="titem">照片與留言因帳號停用而永久消失</div>
+      </div>
+      <div class="tcard" style="border-color:rgba(255,255,255,.1);background:rgba(255,255,255,.03);">
+        <div class="thead" style="color:#888;">林家羽的故事</div>
+        <div class="titem" style="color:#666;">「姊姊離世後，父母曾試圖聯繫Apple解鎖姊姊的手機，卻因法律與契約限制無功而返。手機就是隱私，本來就不是給別人看的東西。」他認為，人們應在生前清楚交代遺囑，即便只是簡單的一句「不要打開」。</div>
+      </div>
+    </div>
+    <div class="bpad"><button class="btn btn-g" onclick="restart()">重新開始</button></div>
+  </div>
+
+  <!-- ── MOCK APP LAYER ── -->
+  <div class="mock-layer" id="mock">
+    <div id="mac" style="height:100%;overflow-y:auto;overflow-x:hidden;"></div>
+  </div>
+</div>
+
+<div style="font-size:10px;color:#14142a;margin-top:14px;text-align:center;font-family:var(--mono);">
+  資料來源：王以仁教授 · 陳業鑫律師 · Apple/Meta 官方說明 · 政大大學報
+</div>
+
+<script>
+// ══════ STATE ══════
+const S = {
+  dt:[false,false,false], // delete tasks
+  tSec:90, tInt:null,
+  prStep:0, prContact:'', prPhotos:0,
+  prAppleDone:false, prFarewellLen:0,
+  lineDeleted:0, lineTarget:3,
+  photoDeleted:false, photoShareDone:false,
+};
+
+// ══════ CLOCK ══════
+function tick(){const n=new Date();document.getElementById('clk').textContent=
+  String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
+tick(); setInterval(tick,15000);
+
+// ══════ SCREEN NAV ══════
+function G(id){
+  document.querySelectorAll('.scr').forEach(s=>{
+    if(s.classList.contains('active')){s.classList.remove('active');s.classList.add('exit');
+      setTimeout(()=>s.classList.remove('exit'),400);}
+  });
+  setTimeout(()=>{const t=document.getElementById(id);if(t)t.classList.add('active');},80);
+}
+
+// ══════ MOCK APP SYSTEM ══════
+const stack=[];
+function openMock(name){
+  stack.length=0; stack.push(name);
+  renderMock();
+  document.getElementById('mock').classList.add('open');
+}
+function pushMock(name){stack.push(name);renderMock();}
+function popMock(){
+  if(stack.length>1){stack.pop();renderMock();}
+  else closeMock();
+}
+function closeMock(){document.getElementById('mock').classList.remove('open'); stack.length=0;}
+function renderMock(){
+  const el=document.getElementById('mac');
+  el.style.opacity='0';
+  setTimeout(()=>{el.innerHTML=''; APPS[stack[stack.length-1]](el); el.style.opacity='1';el.style.transition='opacity .15s';},120);
+}
+
+// ══════ APPS ══════
+const APPS={};
+
+// ── Apple Settings (for password change) ──
+APPS['apple-pw']=function(c){
+  c.innerHTML=`
+  <div class="mnav"><div class="mnav-back" onclick="closeMock()">✕ 關閉</div><div class="mnav-title">設定</div></div>
+  <div class="mock-body">
+    <div class="set-section"><div class="set-group">
+      <div class="set-profile" onclick="pushMock('apple-pw-2')">
+        <div class="profile-av">😊</div>
+        <div class="profile-info"><h3>你的帳號</h3><p>Apple 帳號、iCloud、購買項目</p></div>
+        <span class="chev">›</span>
+      </div>
+    </div></div>
+    <div class="set-section"><div class="set-section-title">一般</div><div class="set-group">
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#555">⚙️</div><div class="set-row-text"><h4>一般</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#1a6a1a">🔔</div><div class="set-row-text"><h4>通知</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#1a4a8a">🔒</div><div class="set-row-text"><h4>隱私權與安全性</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#4a1a1a">🔑</div><div class="set-row-text"><h4>密碼</h4></div><span class="chev">›</span></div>
+    </div></div>
+    <div class="set-section"><div class="set-group">
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#8a5a1a">🛜</div><div class="set-row-text"><h4>Wi-Fi</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#2a2a7a">📶</div><div class="set-row-text"><h4>行動服務</h4></div><span class="chev">›</span></div>
+    </div></div>
+    <div style="padding:16px;font-size:11px;color:#353550;text-align:center;font-family:var(--mono);">↑ 找找看，入口在哪裡？</div>
+  </div>`;
+};
+APPS['apple-pw-2']=function(c){
+  c.innerHTML=`
+  <div class="mnav"><div class="mnav-back" onclick="popMock()">‹ 設定</div><div class="mnav-title">你的帳號</div></div>
+  <div class="mock-body">
+    <div style="padding:16px;display:flex;align-items:center;gap:14px;">
+      <div class="profile-av">😊</div>
+      <div><div style="font-size:17px;font-weight:600;color:var(--text);">你的帳號</div><div style="font-size:12px;color:var(--muted);">you@example.com</div></div>
+    </div>
+    <div class="set-section"><div class="set-group">
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#2a5a9a">☁️</div><div class="set-row-text"><h4>iCloud</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('apple-pw-3')"><div class="set-row-icon" style="background:#7a2a7a">🛡️</div><div class="set-row-text"><h4>登入與安全性</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#7a5a1a">💳</div><div class="set-row-text"><h4>付款與運送</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#2a7a2a">📱</div><div class="set-row-text"><h4>裝置</h4></div><span class="chev">›</span></div>
+    </div></div>
+  </div>`;
+};
+APPS['apple-pw-3']=function(c){
+  c.innerHTML=`
+  <div class="mnav"><div class="mnav-back" onclick="popMock()">‹ 你的帳號</div><div class="mnav-title">登入與安全性</div></div>
+  <div class="mock-body">
+    <div class="set-section"><div class="set-group">
+      <div class="set-row"><div class="set-row-icon" style="background:#3a3a8a">🔐</div><div class="set-row-text"><h4>雙重認證</h4><p>已開啟</p></div><div class="set-row-right"><span style="font-size:11px;color:var(--ok);">開啟</span></div></div>
+      <div class="set-row" onclick="pushMock('apple-pw-form')"><div class="set-row-icon" style="background:#5a2a5a">🔑</div><div class="set-row-text"><h4>更改密碼</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#2a5a2a">📲</div><div class="set-row-text"><h4>受信任的電話號碼</h4></div><span class="chev">›</span></div>
+    </div></div>
+    <div class="set-section"><div class="set-section-title">緊急救援</div><div class="set-group">
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#5a3a1a">🆘</div><div class="set-row-text"><h4>緊急 SOS</h4></div><span class="chev">›</span></div>
+    </div></div>
+  </div>`;
+};
+APPS['apple-pw-form']=function(c){
+  c.innerHTML=`
+  <div class="mnav"><div class="mnav-back" onclick="popMock()">‹ 安全性</div><div class="mnav-title">更改密碼</div></div>
+  <div class="mock-body" style="padding:8px 0;">
+    <div class="set-desc">輸入新密碼以保護你的 Apple 帳號。密碼需符合複雜度要求。</div>
+    <input class="set-input" id="pw1" type="password" placeholder="新密碼" oninput="checkPw()">
+    <input class="set-input" id="pw2" type="password" placeholder="確認新密碼" oninput="checkPw()">
+    <div class="pw-reqs" id="pw-reqs">
+      <div class="pw-req" id="pr-len">至少 8 個字元</div>
+      <div class="pw-req" id="pr-num">包含數字</div>
+      <div class="pw-req" id="pr-cap">包含大寫字母</div>
+      <div class="pw-req" id="pr-match">兩次輸入相符</div>
+    </div>
+    <div style="padding:0 12px;"><button class="btn btn-r" id="pw-submit" onclick="submitPw()" style="opacity:.4;pointer-events:none;">更改密碼</button></div>
+  </div>`;
+};
+function checkPw(){
+  const p=document.getElementById('pw1').value;
+  const p2=document.getElementById('pw2').value;
+  const len=p.length>=8, num=/\d/.test(p), cap=/[A-Z]/.test(p), match=p===p2&&p.length>0;
+  setReq('pr-len',len); setReq('pr-num',num); setReq('pr-cap',cap); setReq('pr-match',match);
+  const ok=len&&num&&cap&&match;
+  const btn=document.getElementById('pw-submit');
+  if(btn){btn.style.opacity=ok?'1':'0.4'; btn.style.pointerEvents=ok?'auto':'none';}
+}
+function setReq(id,ok){const el=document.getElementById(id);if(el){el.classList.toggle('ok',ok);}}
+function submitPw(){
+  markDelTask(0);
+  closeMock();
+}
+
+// ── LINE delete ──
+APPS['line-del']=function(c){
+  const convs=[
+    {id:'l0',name:'那個人',last:'你昨天說的話我一直在想...',time:'昨天',av:'❤️',cls:'priv',priv:true,badge:3},
+    {id:'l1',name:'私密備忘錄',last:'[圖片] [圖片] [圖片]',time:'3天前',av:'🔒',cls:'priv',priv:true,badge:0},
+    {id:'l2',name:'媽媽',last:'你今天有沒有吃早餐啊',time:'今天',av:'👩',cls:'norm',priv:false,badge:2},
+    {id:'l3',name:'工作群組',last:'下週的進度要更新一下',time:'今天',av:'💼',cls:'norm',priv:false,badge:5},
+    {id:'l4',name:'不想讓家人知道的事',last:'這件事我們保密吧',time:'上週',av:'🤫',cls:'priv',priv:true,badge:1},
+    {id:'l5',name:'阿志',last:'昨天謝謝你陪我',time:'2天前',av:'😊',cls:'norm',priv:false,badge:0},
+  ];
+  c.innerHTML=`
+  <div class="line-header"><div class="line-header-title">LINE</div><div style="margin-left:auto;font-size:10px;color:#338833;font-family:var(--mono);">長按對話可刪除</div></div>
+  <div class="line-tabs"><div class="line-tab active">聊天</div><div class="line-tab">通話</div><div class="line-tab">新聞</div><div class="line-tab">錢包</div></div>
+  <div style="padding:8px 12px;font-size:11px;color:#304030;font-family:var(--mono);" id="line-progress">尚未刪除任何對話</div>
+  <div id="line-done-banner" class="line-done-banner">✓ 私密對話已全數刪除，任務完成</div>
+  <div id="line-list">`+
+  convs.map(cv=>`
+    <div class="chat-item" id="${cv.id}">
+      <div class="chat-slide" style="transition: transform 0.2s, background 0.2s; cursor: pointer;">
+        <div class="chat-av ${cv.cls}">${cv.av}</div>
+        <div class="chat-info"><h4>${cv.name}</h4><p>${cv.last}</p></div>
+        <div class="chat-meta">
+          <div class="time">${cv.time}</div>
+          ${cv.badge?`<div class="badge">${cv.badge}</div>`:''}
+        </div>
+      </div>
+    </div>`).join('')+
+  `</div>
+  <div style="display:flex;justify-content:center;padding:14px;"><button class="btn btn-g" style="width:auto;padding:10px 24px;" onclick="lineFinish()">完成 →</button></div>`;
+  // init long press
+  setTimeout(()=>convs.forEach(cv=>initLongPress(cv.id)),100);
+  updateLineProgress();
+};
+
+let lineDeletedIds=new Set();
+
+// 修正：改為長按刪除，取代原本的左滑
+function initLongPress(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const slide=el.querySelector('.chat-slide');
+
+  // 允許上下捲動
+  slide.style.touchAction = 'pan-y';
+
+  let pressTimer;
+  let isDragging = false;
+
+  slide.addEventListener('pointerdown', e => {
+    isDragging = false;
+    slide.style.transform = 'scale(0.96)';
+    slide.style.background = '#152515';
+    
+    pressTimer = setTimeout(() => {
+      if (!isDragging) {
+        lineConfirmDel(id);
+        // 若裝置支援，觸發輕微震動回饋
+        if (navigator.vibrate) navigator.vibrate(50);
+      }
+    }, 600); // 600毫秒長按觸發刪除
+  });
+
+  slide.addEventListener('pointermove', e => {
+    isDragging = true;
+  });
+
+  const cancelPress = () => {
+    clearTimeout(pressTimer);
+    slide.style.transform = 'scale(1)';
+    slide.style.background = '#0d1a0d';
+  };
+
+  slide.addEventListener('pointerup', cancelPress);
+  slide.addEventListener('pointercancel', cancelPress);
+  slide.addEventListener('pointerleave', cancelPress);
+}
+
+function lineConfirmDel(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const slide=el.querySelector('.chat-slide');
+
+  // 允許上下捲動，攔截左右滑動 (防止觸發瀏覽器上一頁)
+  slide.style.touchAction = 'pan-y';
+
+  let sx=0, currentX=0, dragging=false, isSwiped=false;
+
+  slide.addEventListener('pointerdown', e => {
+    sx = e.clientX;
+    dragging = true;
+    slide.setPointerCapture(e.pointerId);
+    slide.style.transition = 'none';
+  });
+
+  slide.addEventListener('pointermove', e => {
+    if(!dragging) return;
+    let dx = e.clientX - sx;
+    
+    // 如果已經是滑開狀態，偏移量要扣掉按鈕寬度 (-80)
+    if (isSwiped) dx -= 80;
+
+    // 限制只能在 0 到 -80 之間滑動
+    currentX = Math.min(0, Math.max(dx, -80));
+    slide.style.transform = `translateX(${currentX}px)`;
+  });
+
+  const endDrag = (e) => {
+    if(!dragging) return;
+    dragging = false;
+    slide.releasePointerCapture(e.pointerId);
+    slide.style.transition = 'transform .22s ease';
+
+    // 判斷放開時是否超過一半
+    if(currentX < -40) {
+      currentX = -80;
+      isSwiped = true;
+      el.classList.add('swiped');
+    } else {
+      currentX = 0;
+      isSwiped = false;
+      el.classList.remove('swiped');
+    }
+    slide.style.transform = `translateX(${currentX}px)`;
+  };
+
+  slide.addEventListener('pointerup', endDrag);
+  // 處理觸控被系統中斷的狀況
+  slide.addEventListener('pointercancel', endDrag);
+}
+
+function lineConfirmDel(id,isPrivate){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.style.transition='all .3s ease';
+  el.style.height=el.offsetHeight+'px';
+  requestAnimationFrame(()=>{el.style.height='0';el.style.opacity='0';el.style.overflow='hidden';});
+  setTimeout(()=>{el.remove();lineDeletedIds.add(id);updateLineProgress();},300);
+}
+function updateLineProgress(){
+  const el=document.getElementById('line-progress');
+  if(!el)return;
+  const privIds=['l0','l1','l4'];
+  const privDel=privIds.filter(x=>lineDeletedIds.has(x)).length;
+  S.lineDeleted=privDel;
+  el.textContent=`已刪除 ${lineDeletedIds.size} 個對話（其中 ${privDel}/${privIds.length} 個私密對話）`;
+  if(privDel>=3){
+    const b=document.getElementById('line-done-banner');
+    if(b)b.style.display='block';
+  }
+}
+function lineFinish(){
+  if(S.lineDeleted>=2){markDelTask(1);}
+  closeMock();
+}
+
+// ── Photos delete ──
+APPS['photos-del']=function(c){
+  c.innerHTML=`
+  <div style="background:#0a0a14;padding:44px 16px 10px;border-bottom:1px solid var(--border);">
+    <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:2px;">照片</div>
+    <div style="display:flex;gap:14px;padding-top:6px;">
+      <span style="font-size:13px;color:var(--accent);border-bottom:2px solid var(--accent);padding-bottom:4px;cursor:pointer;">相簿</span>
+      <span style="font-size:13px;color:var(--muted);padding-bottom:4px;cursor:pointer;" onclick="pushMock('photos-del-all')">全部照片</span>
+    </div>
+  </div>
+  <div class="mock-body" style="padding:12px;">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-family:var(--mono);">我的相簿</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid var(--border);" onclick="pushMock('photos-del-all')">
+        <div style="height:90px;background:linear-gradient(135deg,#1a2a3a,#2a1a3a);display:flex;align-items:center;justify-content:center;font-size:32px;">🖼️</div>
+        <div style="padding:8px;"><div style="font-size:13px;color:var(--text);">全部照片</div><div style="font-size:11px;color:var(--muted);">214 張</div></div>
+      </div>
+      <div style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid rgba(91,156,246,.2);" onclick="pushMock('photos-hidden')">
+        <div style="height:90px;background:linear-gradient(135deg,#1a1a2a,#0a0a1a);display:flex;align-items:center;justify-content:center;font-size:32px;">🔒</div>
+        <div style="padding:8px;"><div style="font-size:13px;color:var(--text);">隱藏</div><div style="font-size:11px;color:var(--muted);">36 張 · 已上鎖</div></div>
+      </div>
+      <div style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid var(--border);" onclick="pushMock('photos-del-all')">
+        <div style="height:90px;background:linear-gradient(135deg,#2a1a2a,#1a2a1a);display:flex;align-items:center;justify-content:center;font-size:32px;">⭐</div>
+        <div style="padding:8px;"><div style="font-size:13px;color:var(--text);">最愛</div><div style="font-size:11px;color:var(--muted);">58 張</div></div>
+      </div>
+      <div style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid var(--border);" onclick="pushMock('photos-del-all')">
+        <div style="height:90px;background:linear-gradient(135deg,#1a2a1a,#2a2a1a);display:flex;align-items:center;justify-content:center;font-size:32px;">🎞️</div>
+        <div style="padding:8px;"><div style="font-size:13px;color:var(--text);">回憶</div><div style="font-size:11px;color:var(--muted);">120 張</div></div>
+      </div>
+    </div>
+    <div style="margin-top:14px;font-size:11px;color:#305030;text-align:center;font-family:var(--mono);">找找看哪個相簿需要處理 🔍</div>
+  </div>
+  <div style="padding:0 12px 14px;"><button class="btn btn-g" style="font-size:13px;" onclick="closeMock()">✕ 關閉</button></div>`;
+};
+APPS['photos-hidden']=function(c){
+  c.innerHTML=`
+  <div id="faceid-overlay" class="faceid-overlay" style="position:fixed;inset:0;z-index:10;">
+    <div class="faceid-ring">🫥</div>
+    <div class="faceid-text">Face ID</div>
+    <div class="faceid-sub">面部識別中⋯</div>
+  </div>
+  <div style="background:#0a0a14;padding:44px 16px 10px;border-bottom:1px solid var(--border);">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="cursor:pointer;color:var(--accent);font-size:13px;" onclick="popMock()">‹ 相簿</span>
+      <span style="font-size:18px;font-weight:700;color:var(--text);flex:1;text-align:center;">隱藏</span>
+      <span style="font-size:13px;color:var(--accent);cursor:pointer;" id="sel-btn" onclick="toggleSelMode()">選取</span>
+    </div>
+  </div>
+  <div class="mock-body">
+    <div id="photo-del-grid" class="photo-grid"></div>
+    <div style="padding:12px;font-size:11px;color:#305050;text-align:center;font-family:var(--mono);" id="photo-hint">點選「選取」，然後勾選要刪除的照片</div>
+  </div>
+  <div class="photo-action-bar">
+    <div class="photo-count" id="photo-del-count">36 張照片</div>
+    <button class="btn btn-r" id="photo-del-btn" style="width:auto;padding:9px 18px;opacity:.4;pointer-events:none;" onclick="confirmDelPhotos()">刪除</button>
+  </div>`;
+  setTimeout(()=>{
+    const fo=document.getElementById('faceid-overlay');
+    if(fo){setTimeout(()=>{fo.style.opacity='0';fo.style.transition='opacity .5s';setTimeout(()=>fo.remove(),500);},1800);}
+    buildDelPhotoGrid();
+  },100);
+};
+const DEL_PHOTOS=[
+  {e:'🌅',bg:'#1a2030',priv:false},{e:'🎂',bg:'#2a1a30',priv:false},{e:'🏖️',bg:'#1a2a20',priv:false},
+  {e:'📷',bg:'#201a2a',priv:true},{e:'🎉',bg:'#2a2020',priv:false},{e:'🍜',bg:'#1a2a1a',priv:false},
+  {e:'🌙',bg:'#1a1a30',priv:true},{e:'😊',bg:'#2a1a20',priv:false},{e:'🎵',bg:'#201a1a',priv:false},
+  {e:'🔐',bg:'#2a1020',priv:true},{e:'🏠',bg:'#1a2020',priv:false},{e:'🎨',bg:'#20281a',priv:false},
+  {e:'🌸',bg:'#2a2010',priv:false},{e:'📱',bg:'#1a1020',priv:true},{e:'🐱',bg:'#1a2a2a',priv:false},
+  {e:'💫',bg:'#201020',priv:true},{e:'🍵',bg:'#20201a',priv:false},{e:'🌿',bg:'#1a2010',priv:false},
+  {e:'⭐',bg:'#282010',priv:false},{e:'🔮',bg:'#10101a',priv:true},{e:'🎭',bg:'#1a1a1a',priv:false},
+  {e:'🌊',bg:'#101a28',priv:false},{e:'🧩',bg:'#1a101a',priv:true},{e:'🌈',bg:'#1a2018',priv:false},
+];
+let delSelMode=false, delSelected=new Set();
+function buildDelPhotoGrid(){
+  const grid=document.getElementById('photo-del-grid');
+  if(!grid)return;
+  grid.innerHTML=DEL_PHOTOS.map((p,i)=>`
+    <div class="ph" id="dp${i}" onclick="toggleDelPhoto(${i})" style="">
+      <div class="ph-img" style="background:${p.bg};">${p.e}${p.priv?'<span style="position:absolute;bottom:2px;left:2px;font-size:9px;opacity:.6;">🔒</span>':''}</div>
+      <div class="ph-check" id="dpc${i}"></div>
+    </div>`).join('');
+}
+function toggleSelMode(){
+  delSelMode=!delSelMode;
+  const btn=document.getElementById('sel-btn');
+  if(btn)btn.textContent=delSelMode?'取消':'選取';
+  const hint=document.getElementById('photo-hint');
+  if(hint)hint.textContent=delSelMode?'勾選要刪除的照片，然後點「刪除」':'點選「選取」，然後勾選要刪除的照片';
+}
+function toggleDelPhoto(i){
+  if(!delSelMode)return;
+  const ph=document.getElementById('dp'+i);
+  if(!ph)return;
+  if(delSelected.has(i)){delSelected.delete(i);ph.classList.remove('sel');}
+  else{delSelected.add(i);ph.classList.add('sel');}
+  const cnt=document.getElementById('photo-del-count');
+  const btn=document.getElementById('photo-del-btn');
+  if(cnt)cnt.textContent=delSelected.size>0?`已選取 ${delSelected.size} 張`:'36 張照片';
+  if(btn){btn.style.opacity=delSelected.size>0?'1':'0.4';btn.style.pointerEvents=delSelected.size>0?'auto':'none';}
+}
+function confirmDelPhotos(){
+  const privSel=Array.from(delSelected).filter(i=>DEL_PHOTOS[i]&&DEL_PHOTOS[i].priv).length;
+  const privTotal=DEL_PHOTOS.filter(p=>p.priv).length;
+  if(privSel>=Math.ceil(privTotal*.6)){
+    markDelTask(2);
+    S.photoDeleted=true;
+  }
+  // Show confirm
+  const grid=document.getElementById('photo-del-grid');
+  if(grid){
+    grid.innerHTML=`<div style="padding:24px;text-align:center;color:var(--ok);font-size:14px;font-family:var(--mono);line-height:2;">✓ 已刪除 ${delSelected.size} 張照片<br><span style="font-size:11px;color:var(--muted);">移至最近刪除，30天後永久清除</span></div>`;
+  }
+  setTimeout(()=>closeMock(),1400);
+}
+APPS['photos-del-all']=function(c){
+  c.innerHTML=`<div class="mnav"><div class="mnav-back" onclick="popMock()">‹ 相簿</div><div class="mnav-title">全部照片</div></div>
+  <div class="mock-body"><div class="photo-grid" style="padding:2px;">`+
+  DEL_PHOTOS.map((p,i)=>`<div class="ph" style="cursor:default;"><div class="ph-img" style="background:${p.bg};">${p.e}</div></div>`).join('')+
+  `</div></div><div style="padding:12px;"><button class="btn btn-g" onclick="popMock()">返回</button></div>`;
+};
+
+// ── Dead end ──
+APPS['dead-end']=function(c){
+  c.innerHTML=`<div class="mnav"><div class="mnav-back" onclick="popMock()">‹ 返回</div><div class="mnav-title">設定</div></div>
+  <div class="mock-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:80%;gap:12px;text-align:center;padding:24px;">
+    <div style="font-size:36px;">🤔</div>
+    <div style="font-size:14px;color:var(--text);">這裡找不到</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.7;">你要找的功能不在這裡。<br>試試別的入口？</div>
+  </div>`;
+};
+
+// ── Apple Legacy Contact (preserve) ──
+APPS['apple-legacy']=function(c){
+  c.innerHTML=`
+  <div class="mnav"><div class="mnav-back" onclick="closeMock()">✕ 關閉</div><div class="mnav-title">設定</div></div>
+  <div class="mock-body">
+    <div class="set-section"><div class="set-group">
+      <div class="set-profile" onclick="pushMock('al-2')">
+        <div class="profile-av">😊</div>
+        <div class="profile-info"><h3>你的帳號</h3><p>Apple 帳號、iCloud、購買項目</p></div>
+        <span class="chev">›</span>
+      </div>
+    </div></div>
+    <div class="set-section"><div class="set-group">
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#555">⚙️</div><div class="set-row-text"><h4>一般</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#1a6a1a">🔔</div><div class="set-row-text"><h4>通知</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#1a4a8a">🔒</div><div class="set-row-text"><h4>隱私權與安全性</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#4a1a1a">🔑</div><div class="set-row-text"><h4>密碼</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#1a5a1a">🔍</div><div class="set-row-text"><h4>Siri 與搜尋</h4></div><span class="chev">›</span></div>
+    </div></div>
+    <div style="padding:14px;font-size:11px;color:#303050;text-align:center;font-family:var(--mono);">遺產聯絡人功能藏在你的 Apple 帳號底下 👆</div>
+  </div>`;
+};
+APPS['al-2']=function(c){
+  c.innerHTML=`
+  <div class="mnav"><div class="mnav-back" onclick="popMock()">‹ 設定</div><div class="mnav-title">你的帳號</div></div>
+  <div class="mock-body">
+    <div style="padding:14px;display:flex;align-items:center;gap:14px;"><div class="profile-av">😊</div><div><div style="font-size:17px;font-weight:600;color:var(--text);">你的帳號</div><div style="font-size:12px;color:var(--muted);">you@icloud.com</div></div></div>
+    <div class="set-section"><div class="set-group">
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#2a5a9a">☁️</div><div class="set-row-text"><h4>iCloud</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('al-3')"><div class="set-row-icon" style="background:#7a2a7a">🛡️</div><div class="set-row-text"><h4>登入與安全性</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#7a5a1a">💳</div><div class="set-row-text"><h4>付款與運送</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#2a7a2a">📱</div><div class="set-row-text"><h4>裝置</h4></div><span class="chev">›</span></div>
+    </div></div>
+  </div>`;
+};
+APPS['al-3']=function(c){
+  c.innerHTML=`
+  <div class="mnav"><div class="mnav-back" onclick="popMock()">‹ 你的帳號</div><div class="mnav-title">登入與安全性</div></div>
+  <div class="mock-body">
+    <div class="set-section"><div class="set-group">
+      <div class="set-row"><div class="set-row-icon" style="background:#3a3a8a">🔐</div><div class="set-row-text"><h4>雙重認證</h4><p>已開啟</p></div><div class="set-row-right"><span style="color:var(--ok);font-size:11px;">開啟</span></div></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#5a2a5a">🔑</div><div class="set-row-text"><h4>更改密碼</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#2a5a2a">📲</div><div class="set-row-text"><h4>受信任的電話號碼</h4></div><span class="chev">›</span></div>
+      <div class="set-row" onclick="pushMock('dead-end')"><div class="set-row-icon" style="background:#2a4a6a">🆘</div><div class="set-row-text"><h4>緊急 SOS</h4></div><span class="chev">›</span></div>
+    </div></div>
+    <div class="set-section"><div class="set-section-title">數位遺產</div><div class="set-group">
+      <div class="set-row" onclick="pushMock('al-4')"><div class="set-row-icon" style="background:#3a2a5a">🫂</div><div class="set-row-text"><h4>遺產聯絡人</h4><p>讓信任的人在你離開後存取 Apple 資料</p></div><span class="chev">›</span></div>
+    </div></div>
+  </div>`;
+};
+APPS['al-4']=function(c){
+  c.innerHTML=`
+  <div class="mnav"><div class="mnav-back" onclick="popMock()">‹ 安全性</div><div class="mnav-title">遺產聯絡人</div></div>
+  <div class="mock-body" style="padding:8px 0;">
+    <div style="text-align:center;padding:20px 16px;">
+      <div style="font-size:48px;margin-bottom:12px;">🫂</div>
+      <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px;">遺產聯絡人</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.75;">加入遺產聯絡人是最簡單、最安全的方式。在你過世後，他們只需提出「申領密鑰」與「死亡證明」，即可存取儲存在你「Apple 帳號」中的資料。</div>
+    </div>
+    <div class="set-action" onclick="completeLegacy()">
+      <h4>➕ 加入遺產聯絡人</h4>
+      <p>從你的聯絡人或家人中選擇一位</p>
+    </div>
+    <div class="set-desc">系統將產生一組申領密鑰，請列印或儲存後交給聯絡人保管。他們不需要有 Apple 裝置也能成為聯絡人。</div>
+  </div>`;
+};
+function completeLegacy(){
+  S.prAppleDone=true;
+  closeMock();
+  setTimeout(()=>showPS(1),200);
+}
+
+// ── Photo share (preserve) ──
+const SHARE_PHOTOS=[
+  {e:'🌅',bg:'#182030'},{e:'🎂',bg:'#28182e'},{e:'🏖️',bg:'#182820'},
+  {e:'🎉',bg:'#282018'},{e:'🍜',bg:'#182818'},{e:'🌙',bg:'#181828'},
+  {e:'😊',bg:'#281820'},{e:'🎵',bg:'#201818'},{e:'🏠',bg:'#182020'},
+  {e:'🎨',bg:'#202818'},{e:'🌸',bg:'#282010'},{e:'🐱',bg:'#182828'},
+  {e:'⭐',bg:'#202010'},{e:'🌿',bg:'#182010'},{e:'💫',bg:'#201020'},
+  {e:'🍵',bg:'#20201a'},
+];
+let shareSelected=new Set();
+APPS['photo-share']=function(c){
+  shareSelected=new Set();
+  c.innerHTML=`
+  <div style="background:#0a0a14;padding:44px 16px 10px;border-bottom:1px solid var(--border);">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="cursor:pointer;color:var(--accent);font-size:13px;" onclick="closeMock()">✕</span>
+      <span style="font-size:17px;font-weight:700;color:var(--text);flex:1;text-align:center;">選擇要保留的照片</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted);text-align:center;padding-top:4px;">點選照片加入或移除</div>
+  </div>
+  <div class="mock-body">
+    <div class="photo-grid" style="padding:2px;" id="share-grid"></div>
+  </div>
+  <div class="photo-action-bar">
+    <div class="photo-count" id="share-count">尚未選取</div>
+    <button class="btn btn-w" id="share-confirm" style="width:auto;padding:9px 18px;opacity:.4;pointer-events:none;" onclick="confirmShare()">確認保留</button>
+  </div>`;
+  setTimeout(()=>{
+    const g=document.getElementById('share-grid');
+    if(g)g.innerHTML=SHARE_PHOTOS.map((p,i)=>`
+      <div class="ph" id="sp${i}" onclick="toggleShare(${i})">
+        <div class="ph-img" style="background:${p.bg};">${p.e}</div>
+        <div class="ph-check" id="spc${i}"></div>
+      </div>`).join('');
+  },80);
+};
+function toggleShare(i){
+  if(shareSelected.has(i)){shareSelected.delete(i);document.getElementById('sp'+i)?.classList.remove('sel');}
+  else{shareSelected.add(i);document.getElementById('sp'+i)?.classList.add('sel');}
+  const cnt=document.getElementById('share-count');
+  const btn=document.getElementById('share-confirm');
+  if(cnt)cnt.textContent=shareSelected.size>0?`已選取 ${shareSelected.size} 張`:'尚未選取';
+  if(btn){btn.style.opacity=shareSelected.size>0?'1':'0.4';btn.style.pointerEvents=shareSelected.size>0?'auto':'none';}
+}
+function confirmShare(){
+  S.prPhotos=shareSelected.size;
+  S.photoShareDone=true;
+  closeMock();
+  // update status display
+  const st=document.getElementById('photo-share-status');
+  const cnt=document.getElementById('photo-sel-count');
+  if(st)st.style.display='block';
+  if(cnt)cnt.textContent=shareSelected.size;
+}
+
+// ══════ DELETE LOGIC ══════
+function startDelete(){
+  Object.assign(S,{dt:[false,false,false],tSec:90});
+  ['dt1','dt2','dt3'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(el)el.classList.remove('done');
+    const c=document.getElementById(id+'c');
+    if(c){c.textContent=['🔒','💬','📸'][i];}
+  });
+  lineDeletedIds=new Set(); delSelected=new Set(); delSelMode=false;
+  G('s-del');
+  if(S.tInt)clearInterval(S.tInt);
+  S.tInt=setInterval(()=>{
+    S.tSec--;
+    updateTimer();
+    if(S.tSec<=0){clearInterval(S.tInt);endDelete();}
+  },1000);
+  updateTimer();
+}
+function updateTimer(){
+  const el=document.getElementById('tnum');
+  const f=document.getElementById('tfill');
+  const m=Math.floor(S.tSec/60), s=S.tSec%60;
+  if(el){el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    el.classList.toggle('urg',S.tSec<=20);}
+  if(f)f.style.width=(S.tSec/90*100)+'%';
+  const st=document.getElementById('del-status');
+  if(st)st.textContent=`已完成 ${S.dt.filter(Boolean).length}/3 項`;
+}
+function markDelTask(i){
+  S.dt[i]=true;
+  const icons=['✓','✓','✓'];
+  const el=document.getElementById('dt'+(i+1));
+  const c=document.getElementById('dt'+(i+1)+'c');
+  if(el)el.classList.add('done');
+  if(c)c.textContent='✓';
+  updateTimer();
+  if(S.dt.every(Boolean)){clearInterval(S.tInt);setTimeout(()=>endDelete(),400);}
+}
+function endDelete(){
+  const done=S.dt.filter(Boolean).length;
+  // 修正：每個任務基礎分提高為 30 分 (全對=90分)，剩餘時間每 4 秒加 1 分
+  // 只要玩家在 50 秒內過關 (剩餘 40 秒以上)，就能拿到 100 分滿分！
+  const timeBonus=Math.max(0,Math.floor(S.tSec/4));
+  const score=Math.min(100,done*30+timeBonus);
+  if(done>=3){
+    document.getElementById('sc-a1').textContent=score;
+    G('s-end-a1');
+  } else {
+    document.getElementById('sc-a2').textContent=score;
+    const remaining=['Apple 帳號密碼','LINE 對話','隱藏相簿'].filter((_,i)=>!S.dt[i]);
+    const d=document.getElementById('a2-detail');
+    if(d)d.textContent='未完成：'+remaining.join('、')+'。這些項目仍有被存取的風險。';
+    G('s-end-a2');
+  }
+}
+
+// ══════ PRESERVE LOGIC ══════
+function startPreserve(){
+  S.prStep=0; S.prContact=''; S.prPhotos=0; S.prAppleDone=false; S.prFarewellLen=0;
+  shareSelected=new Set();
+  ['c0','c1','c2','c3'].forEach(id=>document.getElementById(id)?.classList.remove('sel'));
+  const ft=document.getElementById('ftext'); if(ft)ft.value='';
+  const wc=document.getElementById('wc'); if(wc)wc.textContent='0 字';
+  showPS(0);
+  G('s-pre');
+}
+function showPS(step){
+  S.prStep=step;
+  for(let i=0;i<4;i++){
+    const ps=document.getElementById('ps'+i);
+    if(ps)ps.style.display=i===step?'block':'none';
+    const sd=document.getElementById('sd'+i);
+    if(sd){sd.classList.remove('active','done');
+      if(i<step)sd.classList.add('done');
+      if(i===step)sd.classList.add('active');}
+  }
+  const btn=document.getElementById('pre-btn');
+  const skip=document.getElementById('pre-skip-btn');
+  if(btn)btn.style.display=step>0?'flex':'none';
+  // step 3 shows skip
+  if(skip)skip.style.display=step===3?'flex':'none';
+  const nb=document.getElementById('pre-next-btn');
+  if(nb){
+    if(step===1)nb.textContent='確認聯絡人';
+    else if(step===2)nb.textContent='繼續下一步';
+    else if(step===3)nb.textContent='完成設定 ✓';
+    else nb.textContent='下一步';
+  }
+  // attach farewell counter
+  if(step===3){
+    const ft=document.getElementById('ftext');
+    const wc=document.getElementById('wc');
+    if(ft&&wc){ft.oninput=()=>{S.prFarewellLen=ft.value.length;wc.textContent=ft.value.length+' 字';};}
+  }
+}
+function selC(id,label){
+  document.querySelectorAll('.crow').forEach(c=>c.classList.remove('sel'));
+  document.getElementById(id)?.classList.add('sel');
+  S.prContact=label;
+}
+function preNext(){
+  if(S.prStep===1&&!S.prContact){alert('請先選擇一位聯絡人');return;}
+  if(S.prStep===3){finishPreserve();return;}
+  showPS(S.prStep+1);
+}
+function finishPreserve(){
+  const ft=document.getElementById('ftext');
+  S.prFarewellLen=ft?ft.value.trim().length:0;
+  const score=calcPreScore();
+  document.getElementById('sc-b').textContent=score;
+  const rev=document.getElementById('b-review');
+  if(rev){
+    const items=[
+      S.prAppleDone&&'✓ 已設定 Apple 遺產聯絡人',
+      S.prContact&&`✓ 遺產聯絡人：${S.prContact}`,
+      S.prPhotos>0&&`✓ 選取 ${S.prPhotos} 張照片供家人查看`,
+      S.prFarewellLen>0&&'✓ 留下了最後的話',
+    ].filter(Boolean);
+    rev.innerHTML=items.map(t=>`<div class="rrow"><div class="rv">${t}</div></div>`).join('');
+  }
+  G('s-end-b');
+}
+function calcPreScore(){
+  let s=0;
+  if(S.prAppleDone)s+=40; // 修正：將完成 Apple 設定的分數從 35 提高到 40 分
+  if(S.prContact)s+=20;
+  if(S.prPhotos>=3)s+=20; else if(S.prPhotos>0)s+=10;
+  if(S.prFarewellLen>50)s+=20; else if(S.prFarewellLen>0)s+=10;
+  return Math.min(100,s);
+}
+
+// ══════ RESTART ══════
+function restart(){
+  if(S.tInt)clearInterval(S.tInt);
+  Object.assign(S,{dt:[false,false,false],tSec:90,tInt:null,prStep:0,prContact:'',prPhotos:0,
+    prAppleDone:false,prFarewellLen:0,lineDeleted:0,photoDeleted:false,photoShareDone:false});
+  lineDeletedIds=new Set(); delSelected=new Set(); delSelMode=false; shareSelected=new Set();
+  G('s0');
+}
+</script>
+</body>
+</html>
